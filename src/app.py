@@ -1,29 +1,50 @@
-from flask import Flask,jsonify,request
+# Importamos Flask para el servidor, jsonify para responder en JSON y request para leer lo que envía el cliente
+from flask import Flask, jsonify, request
 
+# Inicializamos la aplicación Flask
 app = Flask(__name__)
 
-# asegúrate de convertir el cuerpo de la solicitud en una estructura de datos real de Python, como un diccionario.  Ya usamos request.json para eso, ya que sabemos que la solicitud estará en formato application/json. Si el formato no se conoce, es posible que deba usar request.get_json(force=True) para ignorar el tipo de contenido y tratarlo como json.
-todos = [ 
-   { "label": "My first task", "done": False } ]
+# Nuestra "Base de Datos" temporal (una lista de diccionarios en memoria)
+todos = [
+    { "label": "My first task", "done": False } 
+]
 
-@app.route("/todos",methods=["GET"])
+# --- RUTA PARA OBTENER TAREAS (READ) ---
+@app.route("/todos", methods=["GET"])
 def get_todos():
-    jason_text = jsonify(todos)
-    return jason_text
+    # Convertimos la lista de Python a un formato JSON que el navegador entienda
+    return jsonify(todos)
 
-@app.route("/todos",methods=["POST"])
+# --- RUTA PARA AÑADIR UNA TAREA (CREATE) ---
+@app.route("/todos", methods=["POST"])
 def add_new_todo():
-   request_body = request.get_json(force=True)
-   print("Incoming request with the following body", request_body)
-   todos.append(request_body)
-   return jsonify(todos)
+    # Extraemos el cuerpo de la solicitud (el JSON que envía el cliente)
+    # force=True asegura que intente leerlo como JSON aunque el header no sea perfecto
+    request_body = request.get_json(force=True)
+    
+    print("Incoming request with the following body", request_body)
+    
+    # Añadimos el nuevo diccionario a nuestra lista 'todos'
+    todos.append(request_body)
+    
+    # Devolvemos la lista actualizada para confirmar que se guardó
+    return jsonify(todos)
 
-@app.route("/todos/<int:position>",methods=["DELETE"])
+# --- RUTA PARA ELIMINAR UNA TAREA (DELETE) ---
+# Usamos <int:position> para capturar un número desde la URL (ej: /todos/0)
+@app.route("/todos/<int:position>", methods=["DELETE"])
 def delete_todo(position):
-   print("This is the position to delete:",position)
-   todos.pop(position)
-   return jsonify(todos)
+    print("This is the position to delete:", position)
+    
+    # Eliminamos el elemento en el índice indicado usando el método .pop() de las listas
+    todos.pop(position)
+    
+    # Devolvemos la lista restante
+    return jsonify(todos)
 
-#Estas lineas siempre deben estar al final del archivo app.py
+# --- CONFIGURACIÓN DEL SERVIDOR ---
 if __name__ == "__main__":
-  app.run(host="0.0.0.0", port=3245,debug=True)
+    # Ejecutamos el servidor en el puerto 3245
+    # host="0.0.0.0" permite que sea accesible desde fuera de tu red local
+    # debug=True reinicia el servidor automáticamente cuando guardas cambios
+    app.run(host="0.0.0.0", port=3245, debug=True)
